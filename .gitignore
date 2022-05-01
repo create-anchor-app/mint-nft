@@ -4,3 +4,7 @@
 target
 **/*.rs.bk
 node_modules
+test-ledger
+.ammanrc.js
+.amman
+tests/programs

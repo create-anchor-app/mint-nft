@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program::invoke;
+use anchor_spl::associated_token::*;
 use anchor_spl::token;
-use anchor_spl::token::{MintTo, Token};
+use anchor_spl::token::{Mint, MintTo, Token, TokenAccount};
 use mpl_token_metadata::instruction::{create_master_edition_v3, create_metadata_accounts_v2};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
@@ -111,17 +112,20 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub mint_authority: Signer<'info>,
 
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub mint: UncheckedAccount<'info>,
-    // #[account(mut)]
     pub token_program: Program<'info, Token>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(init_if_needed, payer = mint_authority, mint::decimals = 0, mint::authority = mint_authority)]
+    pub mint: Account<'info, Mint>,
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub token_account: UncheckedAccount<'info>,
+    #[account(
+        init_if_needed,
+        payer = mint_authority,
+        associated_token::mint = mint,
+        associated_token::authority = mint_authority,
+    )]
+    pub token_account: Box<Account<'info, TokenAccount>>,
     /// CHECK: This is not dangerous because we don't read or write from this account
     pub token_metadata_program: UncheckedAccount<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
@@ -133,4 +137,5 @@ pub struct MintNFT<'info> {
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
     pub master_edition: UncheckedAccount<'info>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }

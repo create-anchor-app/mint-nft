@@ -7,8 +7,10 @@ import {
   getAssociatedTokenAddress,
   createInitializeMintInstruction,
   MINT_SIZE,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token"; // IGNORE THESE ERRORS IF ANY
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 const { PublicKey, SystemProgram } = anchor.web3;
 describe("metaplex-anchor-nft", () => {
   // Configure the client to use the local cluster.
@@ -64,33 +66,6 @@ describe("metaplex-anchor-nft", () => {
     );
     console.log("NFT Account: ", NftTokenAccount.toBase58());
 
-    const mint_tx = new anchor.web3.Transaction().add(
-      anchor.web3.SystemProgram.createAccount({
-        fromPubkey: program.provider.wallet.publicKey,
-        newAccountPubkey: mintKey.publicKey,
-        space: MINT_SIZE,
-        programId: TOKEN_PROGRAM_ID,
-        lamports,
-      }),
-      createInitializeMintInstruction(
-        mintKey.publicKey,
-        0,
-        program.provider.wallet.publicKey,
-        program.provider.wallet.publicKey
-      ),
-      createAssociatedTokenAccountInstruction(
-        program.provider.wallet.publicKey,
-        NftTokenAccount,
-        program.provider.wallet.publicKey,
-        mintKey.publicKey
-      )
-    );
-    const res = await program.provider.send(mint_tx, [mintKey]);
-    console.log(
-      await program.provider.connection.getParsedAccountInfo(mintKey.publicKey)
-    );
-
-    console.log("Account: ", res);
     console.log("Mint key: ", mintKey.publicKey.toString());
     console.log("User: ", program.provider.wallet.publicKey.toString());
 
@@ -116,7 +91,9 @@ describe("metaplex-anchor-nft", () => {
           systemProgram: SystemProgram.programId,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           masterEdition: masterEdition,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         },
+        signers: [mintKey],
       }
     );
     console.log("Your transaction signature", tx);
